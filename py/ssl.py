@@ -1,0 +1,42 @@
+def configure_ssl_node_manager():
+  print('\n=== Reading domain %s ===' % domain_name)
+  readDomain(domain_home)
+  cd('/NMProperties')
+  set('KeyStores', Keystores)
+  set('CustomIdentityKeyStoreFileName', Custom_Identity_Keystore)
+  set('CustomIdentityKeyStorePassPhrase', Custom_Identity_Keystore_Passphrase)
+  set('CustomIdentityAlias', SSL_Identity_Private_Key_Alias)
+  set('CustomIdentityPrivateKeyPassPhrase', SSL_Identity_Private_Key_Passphrase)
+  print('\nUpdating domain %s' % domain_name)
+  updateDomain()
+  closeDomain()
+
+def configure_ssl_servers(server_name):
+  print('\n=== Configure SSL on server %s ===' % server_name)
+  print('\nReading domain %s' % domain_name)
+  readDomain(domain_home)
+  cd('/Servers/' + server_name)
+  cmo.setKeyStores(Keystores)
+  cmo.setCustomIdentityKeyStoreFileName(Custom_Identity_Keystore)
+  cmo.setCustomIdentityKeyStoreType(Custom_Identity_Keystore_Type)
+  cmo.setCustomIdentityKeyStorePassPhraseEncrypted(Custom_Identity_Keystore_Passphrase)
+  cmo.setCustomTrustKeyStoreFileName(Custom_Trust_Keystore)
+  cmo.setCustomTrustKeyStoreType(Custom_Trust_Keystore_Type)
+  cmo.setCustomTrustKeyStorePassPhraseEncrypted(Custom_Trust_Keystore_Passphrase)
+  cd('/Servers/' + server_name + '/SSL/' + server_name)
+  cmo.setHostnameVerificationIgnored(true)
+  cmo.setHostnameVerifier(None)
+  cmo.setTwoWaySSLEnabled(false)
+  cmo.setClientCertificateEnforced(false)
+  cmo.setServerPrivateKeyAlias(SSL_Identity_Private_Key_Alias)
+  cmo.setServerPrivateKeyPassPhraseEncrypted(SSL_Identity_Private_Key_Passphrase)
+  delete_file(domain_home + '/servers/' + server_name + '/data/nodemanager/boot.properties')
+  if server_name in managed_servers_list: 
+    delete_file(domain_home + '/servers/' + server_name + '/security/boot.properties')
+  print('\n Updating domain %s' % domain_name)
+  updateDomain()
+  closeDomain()
+
+def configure_ssl_all_servers():
+  for server_name in all_servers_list:
+    configure_ssl_servers(server_name)
